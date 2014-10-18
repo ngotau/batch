@@ -1,0 +1,3 @@
+= batch
+
+Batch is a Redmine plugin to record and keep track daily of people's allocation to projects. 
