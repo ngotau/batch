@@ -17,8 +17,8 @@ class Allocation < ActiveRecord::Base
               :select => "COUNT(#{Allocation.table_name}.work_date) AS work_date_count, SUM(#{Allocation.table_name}.allocation) AS work_allocation, #{Role.table_name}.name AS role_name",
               :joins => "INNER JOIN #{Role.table_name} ON #{Allocation.table_name}.role_id = #{Role.table_name}.id ",
               :group => "#{Allocation.table_name}.role_id",
-              :conditions => "#{Allocation.table_name}.project_id = #{project.id}"
-              #:order => "role_name"
+              :conditions => "#{Allocation.table_name}.project_id = #{project.id}",
+              :order => "#{Role.table_name}.position"
   end
   
 end
