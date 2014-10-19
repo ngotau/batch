@@ -21,16 +21,26 @@ class BatchController < ApplicationController
 private
   #save work allocation of 1 day
   def update_date(date)
-    member_allocations = Member.where(["from_date <= ? AND to_date >= ?", date, date]).all
-    member_allocations.each do |ma|
-      date_allocation = Allocation.where(["work_date = ? AND user_id = ? AND project_id = ?", date, ma.user_id,ma.project_id]).first
-      if (date_allocation == nil) 
-        date_allocation = Allocation.new
-        date_allocation.work_date = date
-        date_allocation.user_id = ma.user_id
-        date_allocation.project_id = ma.project_id
-        date_allocation.allocation = ma.allocation
-        date_allocation.save
+    #TODO-should consider holidays
+    if (date.cwday < 6)
+      member_allocations = Member.find :all,
+                                       :select => "#{Member.table_name}.*,b.role_id",
+                                       :joins => "INNER JOIN (SELECT #{MemberRole.table_name}.member_id, MIN( #{MemberRole.table_name}.role_id ) AS role_id" <<
+                                                  " FROM member_roles" <<
+                                                  " GROUP BY member_roles.member_id " <<
+                                                  " )b ON #{Member.table_name}.id = b.member_id",
+                                       :conditions => ["#{Member.table_name}.from_date <= ? AND #{Member.table_name}.to_date >= ?",date,date]
+      member_allocations.each do |ma|
+        date_allocation = Allocation.where(["allocation > 0 AND work_date = ? AND user_id = ? AND project_id = ?", date, ma.user_id,ma.project_id]).first
+        if (date_allocation == nil) 
+          date_allocation = Allocation.new
+          date_allocation.work_date = date
+          date_allocation.user_id = ma.user_id
+          date_allocation.project_id = ma.project_id
+          date_allocation.role_id = ma.role_id
+          date_allocation.allocation = ma.allocation
+          date_allocation.save
+        end
       end
     end
   end  
